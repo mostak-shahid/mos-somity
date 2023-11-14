@@ -1,0 +1,48 @@
+User account
+Different admin pannel
+Edit functionality
+
+Deposit functionality 
+1. Amount
+2. Source
+3. Image
+--------------------------------------
+
+Admin functionality
+Deposit approval
+
+
+Plugin Option
+Add Source (Name, Account)
+Add Skim
+1. Skim Name
+2. Interest Rate
+3. Maturity Time
+4. Panenty Before Maturity widraw
+5. Available for user group
+
+User Options
+1. User Group
+--------------------------------------
+
+Database Tables
+
+Deposit Table
+ID
+user_id
+skim_id
+image
+source (Bank/Bkash)
+approved_by
+apply_date
+approved_date
+comment
+status
+
+
+
+skim_user Table
+ID
+sr_no
+skim_id
+user_id
