@@ -38,7 +38,6 @@ if (!function_exists('create_necessary_mos_somity_table')){
         $table_name = $wpdb->prefix.'mos_skim_user';
         $sql = "CREATE TABLE IF NOT EXISTS $table_name (
             ID bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,   
-            sr_no bigint(20) UNSIGNED NOT NULL DEFAULT 0, 
             user_id bigint(20) UNSIGNED NOT NULL DEFAULT 0, 
             status varchar(20) DEFAULT '' NOT NULL,
             skim_details longtext NOT NULL,

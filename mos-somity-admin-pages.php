@@ -58,6 +58,7 @@ add_filter("plugin_action_links_$plugin", 'mos_somity_settings_link');
 add_action('carbon_fields_register_fields', 'mos_somity_theme_options');
 function mos_somity_theme_options() {
     Container::make('theme_options', __('Settings'))
+        ->set_page_file( 'mos-somity-settings' )
         ->set_page_parent('mos-somity')
         ->add_fields(array(
             Field::make( 'association', 'mos_somity_account_page', __( 'Account page' ) )
@@ -67,22 +68,25 @@ function mos_somity_theme_options() {
                     'post_type' => 'page',
                 )
             ))
-            ->set_max(1), 
+            ->set_max(1)
+            ->set_required( true ), 
             Field::make('complex', 'mos_somity_source', __('Source'))
+            ->set_required( true )
             ->set_default_value( [['title'=>'Bank', 'number'=>'0000-0000-0000']] )
                 ->add_fields(array(
                     Field::make('text', 'title', __('Title')),
                     Field::make('text', 'number', __('Account Number')),
                 )),
             Field::make('complex', 'mos_somity_skim', __('Skim'))
-                ->set_default_value( [['title'=>'Default', 'rate'=>'0', 'time'=>'0', 'penalty'=>'0']] )
+                ->set_required( true )
+                ->set_default_value( [['title'=>'Default', 'amount'=>'0', 'rate'=>'0', 'time'=>'0', 'penalty'=>'0']] )
                 ->add_fields(array(
                     Field::make('text', 'title', __('Title')),
+                    Field::make('text', 'amount', __('Amount')),
                     Field::make('text', 'rate', __('Rate')),
                     Field::make('text', 'time', __('Time (Month)')),
                     Field::make('text', 'penalty', __('Penalty')),
                 )),
-
             Field::make( 'rich_text', 'mos_somity_notiece', __( 'Notiece for all user' ) )
        ));
 }

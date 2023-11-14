@@ -26,7 +26,7 @@ if ( ! defined( 'MOS_SOMITY_FILE' ) ) {
 // Define MOS_SOMITY_SETTINGS.
 if ( ! defined( 'MOS_SOMITY_SETTINGS' ) ) {
   //define( 'MOS_SOMITY_SETTINGS', admin_url('/edit.php?post_type=post_type&page=plugin_settings') );
-	define( 'MOS_SOMITY_SETTINGS', admin_url('/admin.php?page=mos-somity') );
+	define( 'MOS_SOMITY_SETTINGS', admin_url('/admin.php?page=mos-somity-settings') );
 }
 
 require_once ( plugin_dir_path( MOS_SOMITY_FILE ) . 'mos-somity-custom-tables.php' );

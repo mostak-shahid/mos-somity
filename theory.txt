@@ -44,5 +44,10 @@ status
 skim_user Table
 ID
 sr_no
-skim_id
 user_id
+status
+skim_details
+apply_date
+approved_date
+end_date
+
