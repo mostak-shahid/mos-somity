@@ -47,11 +47,11 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                             <li <?php echo ($p == 'add-deposit')?'class="menu-active"':''  ?>><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-deposit">Add Deposit</a></li>
                         </ul>
                     </li>
-                    <li>
-                        <a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=all-skim">Skims</a>
+                    <li <?php echo ($p == 'skims' || $p == 'add-skim')?'class="menu-open"':''  ?>>
+                        <a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=skims">Skims</a>
                         <ul>
-                            <li><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=all-skim">All Skim</a></li>
-                            <li><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-skim">Add Skim</a></li>
+                            <li <?php echo ($p == 'skims')?'class="menu-active"':''  ?>><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=skims">All Skim</a></li>
+                            <li <?php echo ($p == 'add-skim')?'class="menu-active"':''  ?>><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-skim">Add Skim</a></li>
                         </ul>
                     </li>
                     <li><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=edit-profile">Edit Profile</a></li>
@@ -70,7 +70,7 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                     all deposits
                 <?php elseif($p == 'add-deposit') : ?>
                     Add Deposit
-                <?php elseif($p == 'all-skim') : ?>
+                <?php elseif($p == 'skims') : ?>
                     <?php
                     //SELECT * FROM `wp_mos_skim_user` WHERE `user_id` = 1
                     $results = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_skim_user WHERE user_id = {$current_user_id}");  

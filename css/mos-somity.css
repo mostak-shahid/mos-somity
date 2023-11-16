@@ -1,3 +1,35 @@
+a {
+  text-decoration: none;
+}
+.somity-account-menu,
+.somity-account-menu ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  background-color: #eaeaea;
+}
+.somity-account-menu li {
+}
+.somity-account-menu li a {
+  display: block;
+  padding: 10px;
+  color: #000000;
+}
+.somity-account-menu ul {
+  display: none;
+}
+.somity-account-menu li.menu-open ul {
+  display: block;
+}
+.somity-account-menu li.menu-open > a {
+  background-color: #cccccc;
+}
+.somity-account-menu li.menu-active > a {
+  background-color: #aaaaaa;
+}
+.somity-account-menu li li > a {
+  padding-left: 30px;
+}
 .container,
 .container-fluid,
 .container-xxl,
@@ -4090,4 +4122,18 @@
   .d-print-none {
     display: none !important;
   }
+}
+.table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table th,
+.table td {
+  border: 1px solid black;
+  padding: 5px;
+}
+
+.table th {
+  background-color: #eee;
 }
