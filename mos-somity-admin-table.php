@@ -130,13 +130,32 @@ class Mos_Somity_List_Table extends WP_List_Table
     }
 
     // Adding action links to column
+    function column_user_id($item){
+        $actions = [];
+        $author_obj = get_user_by('id', $item['ID']);       
+        if ($item['status'] == 'pending') {            
+            $actions['active'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Active', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'active', $item['ID']);
+        } 
+        elseif ($item['status'] == 'active'){
+            $actions['close'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Close', 'mos-somity') . '</a>', $_REQUEST['page'], 'close', $item['ID']);
+        } 
+        elseif ($item['status'] == 'close') {
+            $actions['reactive'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Restore', 'mos-somity') . '</a>', $_REQUEST['page'], 'reactive', $item['ID']);
+        }
+        return sprintf('%1$s %2$s', $author_obj->display_name . " (ID: ".$item['ID'].")", $this->row_actions($actions));
+    }
     function column_skim_details($item)
     {
         $actions = [];
         $output = '';
         if ($item['skim_details'] ) {
             $skim_details = json_decode($item['skim_details'], true);
-            $output = $skim_details['title'] . "<br/>" .$skim_details['amount'];
+
+            $output .= '<b>Name: </b>' . $skim_details['title'] . ", "; 
+            $output .= '<b>Amount: </b>' . ($skim_details['amount'])?$skim_details['amount']:0 . ", " ;
+            $output .= '<b>Rate: </b>' . ($skim_details['rate'])?$skim_details['rate']:0 . ", " ;
+            $output .= '<b>Time: </b>' . ($skim_details['time'])?$skim_details['time']:0 . ", " ;
+            $output .= '<b>Penalty: </b>' . ($skim_details['penalty'])?$skim_details['penalty']:0 ;
         }
         // if ($item['p_cv']) {
         //     $actions['cv'] = '<a class="mos-action mos-action-cv" data-cv="'.$item['p_cv'].'" href="?post_type=job&page='.$_REQUEST['page'].'&action=cv&element='.$item['ID'].'">' . __('View CV', 'mos-admin-table') . '</a>';
@@ -157,9 +176,9 @@ class Mos_Somity_List_Table extends WP_List_Table
                 'additional-info'      => '<a class="mos-action mos-action-data thickbox" data-html="'.$p_additional_info_html.'" href="#TB_inline?&width=600&height=550&inlineId=my-content-id">' . __('Additional Info', 'mos-admin-table') . '</a>',
                 
                 'delete'    => sprintf('<a href="?post_type=job&page=%s&action=%s&element=%s">' . __('Delete', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'delete', $item['ID']),
-        );*/
-        $actions['delete'] = sprintf('<a href="?post_type=job&page=%s&action=%s&element=%s">' . __('Delete', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'delete', $item['ID']);
-        return sprintf('%1$s %2$s', $output, $this->row_actions($actions));
+        );
+        $actions['delete'] = sprintf('<a href="?post_type=job&page=%s&action=%s&element=%s">' . __('Delete', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'delete', $item['ID']);*/
+        return sprintf('%1$s', $output);
     }
 
     // To show bulk action dropdown
@@ -183,12 +202,13 @@ function my_add_menu_items() {
 	//$mos_sample_page = add_menu_page(__('Mos List Table', 'mos-admin-table'), __('Mos List Table', 'mos-admin-table'), 'manage_options', 'mos_list_table', 'mos_list_init');
     $mos_sample_page = add_submenu_page( 
         'mos-somity', 
-        'Table', 
-        'Table', 
+        'Skims', 
+        'Skims', 
         'manage_options', 
-        'job-applications', 
-        'mos_list_init' 
+        'mos-somity-skim', 
+        'mos_somity_options_skims_page_html' 
     );
+    //add_submenu_page('mos-somity', 'Deposits', 'Deposits', 'manage_options', 'mos-somity', 'mos_somity_options_page_html');
  
 	add_action("load-$mos_sample_page", "mos_somity_screen_options");
 }
@@ -224,10 +244,14 @@ function test_table_set_option($status, $option, $value) {
 
 
 // Plugin menu callback function
-function mos_list_init(){
+function mos_somity_options_skims_page_html(){
     // Creating an instance
     $table = new Mos_Somity_List_Table();
-    echo '<div class="wrap"><h2>Mos Admin Table</h2>';
+    ?>
+    
+	<div class="wrap mos-plugin-wrapper">
+		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+    <?php
     echo '<form method="post">';
     // Prepare table
     $table->prepare_items();
@@ -236,16 +260,43 @@ function mos_list_init(){
     // Display table
     $table->display();
     echo '</div></form>';
+    ?>
+    </div>
+    <?php
 }
-function mos_application_delete(){
-    // delete
-    //http://alpha-bd.test/wp-admin/edit.php?page=job-applications&action=delete&element=3
-    if (isset($_GET['action']) && $_GET['page'] == "job-applications" && $_GET['action'] == "delete") {
-        global $wpdb;
-        $elementID = intval($_GET['element']);
-        if ($elementID)
-        $wpdb->delete( $wpdb->prefix . 'mos_skim_user', array( 'ID' => $elementID ) );
-        //... do operation
+function mos_application_delete(){    
+    global $wpdb;
+    $mos_skim_user_table = $wpdb->prefix . 'mos_skim_user';
+    if (isset($_GET['action']) && $_GET['page'] == "mos-somity-skim") {
+        $ID = intval($_GET['id']);
+        if ($ID){
+            if ($_GET['action'] == "active") {
+                $wpdb->update(
+                    $mos_skim_user_table,
+                    array(
+                        'status' => 'active',
+                        'approved_date' => date('Y-m-d')
+                    ),
+                    array( 'ID' => $ID ),
+                );
+            } else if ($_GET['action'] == "close") {
+                $wpdb->update(
+                    $mos_skim_user_table,
+                    array(
+                        'status' => 'close',	// string
+                    ),
+                    array( 'ID' => $ID ),
+                );
+            } else if ($_GET['action'] == "reactive") {
+                $wpdb->update(
+                    $mos_skim_user_table,
+                    array(
+                        'status' => 'active',	// string
+                    ),
+                    array( 'ID' => $ID ),
+                );
+            }
+        }
     }
 }
 add_action('admin_head', 'mos_application_delete');
