@@ -12,6 +12,7 @@ if (!function_exists('create_necessary_mos_somity_table')){
             skim_id bigint(20) UNSIGNED NOT NULL DEFAULT 0, 
             photo varchar(255) DEFAULT '' NOT NULL,
             source varchar(255) DEFAULT '' NOT NULL,
+            amount bigint(20) UNSIGNED NOT NULL DEFAULT 0, 
             approved_by bigint(20) UNSIGNED NOT NULL DEFAULT 0, 
             apply_date date DEFAULT '0000-00-00' NOT NULL,
             approved_date date DEFAULT '0000-00-00' NOT NULL,

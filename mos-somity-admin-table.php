@@ -132,7 +132,7 @@ class Mos_Somity_List_Table extends WP_List_Table
     // Adding action links to column
     function column_user_id($item){
         $actions = [];
-        $author_obj = get_user_by('id', $item['ID']);       
+        $author_obj = get_user_by('id', $item['user_id']);       
         if ($item['status'] == 'pending') {            
             $actions['active'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Active', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'active', $item['ID']);
         } 
@@ -142,7 +142,7 @@ class Mos_Somity_List_Table extends WP_List_Table
         elseif ($item['status'] == 'close') {
             $actions['reactive'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Restore', 'mos-somity') . '</a>', $_REQUEST['page'], 'reactive', $item['ID']);
         }
-        return sprintf('%1$s %2$s', $author_obj->display_name . " (ID: ".$item['ID'].")", $this->row_actions($actions));
+        return sprintf('%1$s %2$s', $author_obj->display_name . " (ID: ".$item['user_id'].")", $this->row_actions($actions));
     }
     function column_skim_details($item)
     {
@@ -151,11 +151,11 @@ class Mos_Somity_List_Table extends WP_List_Table
         if ($item['skim_details'] ) {
             $skim_details = json_decode($item['skim_details'], true);
 
-            $output .= '<b>Name: </b>' . $skim_details['title'] . ", "; 
-            $output .= '<b>Amount: </b>' . ($skim_details['amount'])?$skim_details['amount']:0 . ", " ;
-            $output .= '<b>Rate: </b>' . ($skim_details['rate'])?$skim_details['rate']:0 . ", " ;
-            $output .= '<b>Time: </b>' . ($skim_details['time'])?$skim_details['time']:0 . ", " ;
-            $output .= '<b>Penalty: </b>' . ($skim_details['penalty'])?$skim_details['penalty']:0 ;
+            $output .= '<strong>Name: </strong>' . $skim_details['title'] . ", "; 
+            $output .= '<strong>Amount: </strong>' . $skim_details['amount']. ", " ;
+            $output .= '<strong>Rate: </strong>' . $skim_details['rate'] . ", " ;
+            $output .= '<strong>Time: </strong>' . $skim_details['time']. ", " ;
+            $output .= '<strong>Penalty: </strong>' . $skim_details['penalty'] ;
         }
         // if ($item['p_cv']) {
         //     $actions['cv'] = '<a class="mos-action mos-action-cv" data-cv="'.$item['p_cv'].'" href="?post_type=job&page='.$_REQUEST['page'].'&action=cv&element='.$item['ID'].'">' . __('View CV', 'mos-admin-table') . '</a>';

@@ -4,6 +4,62 @@ global $wpdb;
 $table_mos_deposits = $wpdb->prefix.'mos_deposits';
 $table_mos_skim_user = $wpdb->prefix.'mos_skim_user';
 $current_user_id = get_current_user_id();
+$mos_skim_user = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_skim_user WHERE user_id = {$current_user_id}"); 
+
+$mos_skim_user_active = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_skim_user WHERE user_id = {$current_user_id} AND status = 'active'"); 
+
+if (isset( $_POST['mos_somity_add_deposit_field'] ) && wp_verify_nonce( $_POST['mos_somity_add_deposit_field'], 'mos_somity_add_deposit_action' ) ) {
+    // var_dump($_POST);
+    $err = 0;
+    if ( ! function_exists( 'wp_handle_upload' ) ) 
+    require_once( ABSPATH . 'wp-admin/includes/file.php' );
+
+    $uploadedfile = $_FILES['image'];
+    if ($uploadedfile) {
+        //var_dump($uploadedfile);
+        if($uploadedfile['type'] != 'image/jpeg' && $uploadedfile['type'] != 'image/png' && $uploadedfile['type'] != 'image/gif') {
+            $err++;
+        }
+        if ($uploadedfile["size"] > 5000000) {
+            $err++;
+        }
+        if (!$err) {
+            /*["name"]=> string(9) "job_1.png" 
+            ["full_path"]=> string(9) "job_1.png" 
+            ["type"]=> string(9) "image/png" 
+            ["tmp_name"]=> string(44) "C:\Users\User\AppData\Local\Temp\phpE100.tmp" 
+            ["error"]=> int(0) 
+            ["size"]=> int(357677)
+            */
+
+            $upload_overrides = array( 'test_form' => false );
+            $movefile = wp_handle_upload( $uploadedfile, $upload_overrides );
+
+        }
+    } else {
+        $err++;
+    }
+    if (!$err) {
+        //$movefile["url"]
+        $wpdb->insert(
+            $table_mos_deposits,
+            array(
+                'user_id' => $current_user_id,
+                'skim_id' => $_POST['skim'],
+                'photo' => $movefile["url"],
+                'source' => $_POST["source"],
+                'amount' => $_POST["amount"],
+                'apply_date' => date('Y-m-d'),
+                'comment' => $_POST["comment"],
+                'status' => 'pending',
+            )
+        );
+        $msg = 'Your request has been received, admin will approve your request.';
+    }
+}
+		
+
+
 $msg = '';
 $p = (@$_GET['p'])?$_GET['p']:'';
 $action = (@$_GET['action'])?$_GET['action']:'';
@@ -69,16 +125,55 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                 <?php if($p == 'deposits') : ?>
                     all deposits
                 <?php elseif($p == 'add-deposit') : ?>
-                    Add Deposit
+                    <form class="needs-validation" method="post" enctype="multipart/form-data">                        
+                        <?php wp_nonce_field( 'mos_somity_add_deposit_action', 'mos_somity_add_deposit_field' ); ?>
+                        <div class="mb-3">
+                            <label for="skim" class="form-label">Select Skim</label>
+                            <select name="skim" class="form-select" id="skim" required>
+                                <option value="">Choose...</option>
+                                <?php foreach($mos_skim_user as $skim) : ?>
+                                    <?php $skim_details = json_decode($skim->skim_details)?>
+                                    <option value="<?php echo $skim->ID ?>"><?php echo $skim_details->title?>(ID: <?php echo $skim->ID ?>)</option>
+                                <?php endforeach?>
+                            </select>
+                            <div class="invalid-feedback">
+                            Please select a valid state.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="source" class="form-label">Source</label>
+                            <select name="source" class="form-select" id="source" required>
+                                <option value="">Choose...</option>
+                                <?php foreach($mos_somity_source as $source) : ?>
+                                    <option><?php echo $source['title'] ?>(<?php echo $source['number'] ?>)</option>
+                                <?php endforeach?>
+                            </select>
+                            <div class="invalid-feedback">
+                            Please select a valid state.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount</label>
+                            <input name="amount" type="number" class="form-control" required>
+                            <div class="invalid-feedback">Example invalid form file feedback</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Image</label>
+                            <input name="image" type="file" class="form-control" aria-label="file example" required accept="image/png, image/gif, image/jpeg">
+                            <div class="invalid-feedback">Example invalid form file feedback</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Textarea</label>
+                            <textarea name="comment" class="form-control" id="comment" placeholder="Comment"></textarea>
+                        </div>
+                        <input type="hidden" name="skim_id" value="">
+                        <button class="btn btn-primary" type="submit">Submit form</button>
+                        </form>
                 <?php elseif($p == 'skims') : ?>
-                    <?php
-                    //SELECT * FROM `wp_mos_skim_user` WHERE `user_id` = 1
-                    $results = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_skim_user WHERE user_id = {$current_user_id}");  
-                     
-                    ?>
                     <table class="table">
                         <thead>
                             <tr>
+                                <th scope="col">ID</th>
                                 <th scope="col">Title</th>
                                 <th scope="col">Amount</th>
                                 <th scope="col">Rate</th>
@@ -91,9 +186,10 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach($results as $skim) : ?>
+                            <?php foreach($mos_skim_user as $skim) : ?>
                                 <?php $skim_details = json_decode($skim->skim_details)?>
                                     <tr>
+                                        <td><?php echo $skim->ID ?></td>
                                         <td><?php echo $skim_details->title ?></td>
                                         <td><?php echo $skim_details->amount ?></td>
                                         <td><?php echo $skim_details->rate ?></td>
