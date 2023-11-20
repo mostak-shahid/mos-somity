@@ -7,7 +7,7 @@ if (!class_exists('WP_List_Table')) {
 }
 
 // Extending class
-class Mos_Somity_List_Table extends WP_List_Table
+class Mos_Somity_Deposits_List_Table extends WP_List_Table
 {
     // Here we will add our code
 
@@ -18,16 +18,16 @@ class Mos_Somity_List_Table extends WP_List_Table
     private function get_table_data( $search = '' ) {
         global $wpdb;
 
-        $table = $wpdb->prefix . 'mos_skim_user';
-
+        $table = $wpdb->prefix . 'mos_deposits';
+        
         if ( !empty($search) ) {
             return $wpdb->get_results(
-                "SELECT * from {$table} WHERE 'user_id' Like '%{$search}%' OR 'apply_date' Like '%{$search}%' OR 'status' Like '%{$search}%'",
+                "SELECT {$wpdb->prefix}mos_deposits.*, {$wpdb->prefix}users.display_name FROM {$wpdb->prefix}mos_deposits LEFT JOIN {$wpdb->prefix}users ON {$wpdb->prefix}mos_deposits.user_id =  {$wpdb->prefix}users.ID WHERE {$wpdb->prefix}users.display_name Like '%{$search}%' OR '{$wpdb->prefix}mos_deposits.apply_date' Like '%{$search}%' OR '{$wpdb->prefix}mos_deposits.status' Like '%{$search}%'",
                 ARRAY_A
             );
         } else {
             return $wpdb->get_results(
-                "SELECT * from {$table}",
+                "SELECT {$wpdb->prefix}mos_deposits.*, {$wpdb->prefix}users.display_name FROM {$wpdb->prefix}mos_deposits LEFT JOIN {$wpdb->prefix}users ON {$wpdb->prefix}mos_deposits.user_id =  {$wpdb->prefix}users.ID",
                 ARRAY_A
             );
         }
@@ -38,8 +38,9 @@ class Mos_Somity_List_Table extends WP_List_Table
     {
         $columns = array(
                 'cb'            => '<input type="checkbox" />',
-                'user_id'          => __('User ID', 'mos-admin-table'),
-                'skim_details'          => __('Details', 'mos-admin-table'),
+                'display_name'          => __('Name', 'mos-admin-table'),
+                'source'          => __('Source', 'mos-admin-table'),
+                'amount'          => __('Amount', 'mos-admin-table'),
                 'apply_date'          => __('Apply Date', 'mos-admin-table'),
                 'status'         => __('Status', 'mos-admin-table'),
         );
@@ -84,8 +85,9 @@ class Mos_Somity_List_Table extends WP_List_Table
     function column_default($item, $column_name)
     {
         switch ($column_name) {
-            case 'id':
-            case 'user_id':
+            case 'display_name':
+            case 'source':
+            case 'amount':
             case 'apply_date':
             case 'status':
             default:
@@ -106,7 +108,7 @@ class Mos_Somity_List_Table extends WP_List_Table
     protected function get_sortable_columns()
     {
         $sortable_columns = array(
-            'user_id'  => array('user_id', false),
+            'display_name'  => array('display_name', false),
             'apply_date' => array('apply_date', false),
             'status'   => array('status', true)
         );
@@ -130,11 +132,11 @@ class Mos_Somity_List_Table extends WP_List_Table
     }
 
     // Adding action links to column
-    function column_user_id($item){
+    function column_display_name($item){
         $actions = [];
         $author_obj = get_user_by('id', $item['user_id']);       
         if ($item['status'] == 'pending') {            
-            $actions['active'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Active', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'active', $item['ID']);
+            $actions['active'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Approve', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'active', $item['ID']);
         } 
         elseif ($item['status'] == 'active'){
             $actions['close'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Close', 'mos-somity') . '</a>', $_REQUEST['page'], 'close', $item['ID']);
@@ -143,42 +145,6 @@ class Mos_Somity_List_Table extends WP_List_Table
             $actions['reactive'] = sprintf('<a href="?page=%s&action=%s&id=%s">' . __('Restore', 'mos-somity') . '</a>', $_REQUEST['page'], 'reactive', $item['ID']);
         }
         return sprintf('%1$s %2$s', $author_obj->display_name . " (ID: ".$item['user_id'].")", $this->row_actions($actions));
-    }
-    function column_skim_details($item)
-    {
-        $actions = [];
-        $output = '';
-        if ($item['skim_details'] ) {
-            $skim_details = json_decode($item['skim_details'], true);
-
-            $output .= '<strong>Name: </strong>' . $skim_details['title'] . ", "; 
-            $output .= '<strong>Amount: </strong>' . $skim_details['amount']. ", " ;
-            $output .= '<strong>Rate: </strong>' . $skim_details['rate'] . ", " ;
-            $output .= '<strong>Time: </strong>' . $skim_details['time']. ", " ;
-            $output .= '<strong>Penalty: </strong>' . $skim_details['penalty'] ;
-        }
-        // if ($item['p_cv']) {
-        //     $actions['cv'] = '<a class="mos-action mos-action-cv" data-cv="'.$item['p_cv'].'" href="?post_type=job&page='.$_REQUEST['page'].'&action=cv&element='.$item['ID'].'">' . __('View CV', 'mos-admin-table') . '</a>';
-            
-        // }
-        // if ($item['p_cover_letter']) {
-        //     $actions['cover-letter'] = '<a class="mos-action mos-action-data thickbox" data-html="'.$item['p_cover_letter'].'" href="#TB_inline?&width=600&height=550&inlineId=my-content-id">' . __('Cover Letter', 'mos-admin-table') . '</a>';
-        // }
-        // if ($item['p_additional_info']) {
-        //     $actions['additional-info'] = '<a class="mos-action mos-action-data thickbox" data-html="'.$p_additional_info_html.'" href="#TB_inline?&width=600&height=550&inlineId=my-content-id">' . __('Additional Info', 'mos-admin-table') . '</a>';
-        // }
-        /*$actions = array(
-                
-                'cv'      => '<a class="mos-action mos-action-cv" data-cv="'.$item['p_cv'].'" href="?post_type=job&page='.$_REQUEST['page'].'&action=cv&element='.$item['ID'].'">' . __('View CV', 'mos-admin-table') . '</a>',
-                
-                'cover-letter'      => '<a class="mos-action mos-action-data thickbox" data-html="'.$item['p_cover_letter'].'" href="#TB_inline?&width=600&height=550&inlineId=my-content-id">' . __('Cover Letter', 'mos-admin-table') . '</a>',
-                
-                'additional-info'      => '<a class="mos-action mos-action-data thickbox" data-html="'.$p_additional_info_html.'" href="#TB_inline?&width=600&height=550&inlineId=my-content-id">' . __('Additional Info', 'mos-admin-table') . '</a>',
-                
-                'delete'    => sprintf('<a href="?post_type=job&page=%s&action=%s&element=%s">' . __('Delete', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'delete', $item['ID']),
-        );
-        $actions['delete'] = sprintf('<a href="?post_type=job&page=%s&action=%s&element=%s">' . __('Delete', 'mos-admin-table') . '</a>', $_REQUEST['page'], 'delete', $item['ID']);*/
-        return sprintf('%1$s', $output);
     }
 
     // To show bulk action dropdown
@@ -194,7 +160,7 @@ class Mos_Somity_List_Table extends WP_List_Table
 }
 
 // Adding menu
-function my_add_menu_items() {
+function mos_somity_deposits_add_menu_items() {
  
 	global $mos_sample_page;
  
@@ -202,20 +168,20 @@ function my_add_menu_items() {
 	//$mos_sample_page = add_menu_page(__('Mos List Table', 'mos-admin-table'), __('Mos List Table', 'mos-admin-table'), 'manage_options', 'mos_list_table', 'mos_list_init');
     $mos_sample_page = add_submenu_page( 
         'mos-somity', 
-        'Skims', 
-        'Skims', 
+        'Deposits', 
+        'Deposits', 
         'manage_options', 
-        'mos-somity-skim', 
-        'mos_somity_options_skims_page_html' 
+        'mos-somity', 
+        'mos_somity_options_deposits_page_html' 
     );
     //add_submenu_page('mos-somity', 'Deposits', 'Deposits', 'manage_options', 'mos-somity', 'mos_somity_options_page_html');
  
-	add_action("load-$mos_sample_page", "mos_somity_screen_options");
+	add_action("load-$mos_sample_page", "mos_somity_deposits_screen_options");
 }
-add_action('admin_menu', 'my_add_menu_items');
+add_action('admin_menu', 'mos_somity_deposits_add_menu_items');
 
 // add screen options
-function mos_somity_screen_options() {
+function mos_somity_deposits_screen_options() {
  
 	global $mos_sample_page;
     global $table;
@@ -233,20 +199,20 @@ function mos_somity_screen_options() {
 	);
 	add_screen_option( 'per_page', $args );
 
-    $table = new Mos_Somity_List_Table();
+    $table = new Mos_Somity_Deposits_List_Table();
 
 }
 
-add_filter('set-screen-option', 'test_table_set_option', 10, 3);
-function test_table_set_option($status, $option, $value) {
+add_filter('set-screen-option', 'mos_somity_deposits_table_set_option', 10, 3);
+function mos_somity_deposits_table_set_option($status, $option, $value) {
     return $value;
 }
 
 
 // Plugin menu callback function
-function mos_somity_options_skims_page_html(){
+function mos_somity_options_deposits_page_html(){
     // Creating an instance
-    $table = new Mos_Somity_List_Table();
+    $table = new Mos_Somity_Deposits_List_Table();
     ?>
     
 	<div class="wrap mos-plugin-wrapper">
@@ -264,15 +230,15 @@ function mos_somity_options_skims_page_html(){
     </div>
     <?php
 }
-function mos_application_delete(){    
+function mos_somity_deposits_application_delete(){    
     global $wpdb;
-    $mos_skim_user_table = $wpdb->prefix . 'mos_skim_user';
-    if (isset($_GET['action']) && $_GET['page'] == "mos-somity-skim") {
+    $mos_deposits_table = $wpdb->prefix . 'mos_deposits';
+    if (isset($_GET['action']) && $_GET['page'] == "mos-somity") {
         $ID = intval($_GET['id']);
         if ($ID){
             if ($_GET['action'] == "active") {
                 $wpdb->update(
-                    $mos_skim_user_table,
+                    $mos_deposits_table,
                     array(
                         'status' => 'active',
                         'approved_date' => date('Y-m-d')
@@ -281,7 +247,7 @@ function mos_application_delete(){
                 );
             } else if ($_GET['action'] == "close") {
                 $wpdb->update(
-                    $mos_skim_user_table,
+                    $mos_deposits_table,
                     array(
                         'status' => 'close',	// string
                     ),
@@ -289,7 +255,7 @@ function mos_application_delete(){
                 );
             } else if ($_GET['action'] == "reactive") {
                 $wpdb->update(
-                    $mos_skim_user_table,
+                    $mos_deposits_table,
                     array(
                         'status' => 'active',	// string
                     ),
@@ -299,10 +265,10 @@ function mos_application_delete(){
         }
     }
 }
-add_action('admin_head', 'mos_application_delete');
+add_action('admin_head', 'mos_somity_deposits_application_delete');
 
 //Popup
-function mos_admin_popup_content(){
+function mos_somity_deposits_admin_popup_content(){
     add_thickbox();
     ?>
     <div id="my-content-id" style="display:none;">
@@ -310,4 +276,4 @@ function mos_admin_popup_content(){
     </div>
     <?php
 }
-add_action('admin_footer', 'mos_admin_popup_content');
+add_action('admin_footer', 'mos_somity_deposits_admin_popup_content');

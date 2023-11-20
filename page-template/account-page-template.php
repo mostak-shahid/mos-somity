@@ -5,8 +5,9 @@ $table_mos_deposits = $wpdb->prefix.'mos_deposits';
 $table_mos_skim_user = $wpdb->prefix.'mos_skim_user';
 $current_user_id = get_current_user_id();
 $mos_skim_user = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_skim_user WHERE user_id = {$current_user_id}"); 
-
 $mos_skim_user_active = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_skim_user WHERE user_id = {$current_user_id} AND status = 'active'"); 
+
+$mos_deposits = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_deposits WHERE user_id = {$current_user_id}"); 
 
 if (isset( $_POST['mos_somity_add_deposit_field'] ) && wp_verify_nonce( $_POST['mos_somity_add_deposit_field'], 'mos_somity_add_deposit_action' ) ) {
     // var_dump($_POST);
@@ -115,15 +116,37 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                 </ul>
             </div>
             <div class="col-lg-8">
-                <?php if ($mos_somity_notiece) : ?>
+                <?php if (@$mos_somity_notiece) : ?>
                     <div class="somity-account-notiece"><?php echo $mos_somity_notiece ?></div>
                 <?php endif?>
-                <?php if ($msg) : ?>
+                <?php if (@$msg) : ?>
                     <div class="somity-account-notiece"><?php echo $msg ?></div>
                 <?php endif?>
 
                 <?php if($p == 'deposits') : ?>
-                    all deposits
+                    
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Amount</th>
+                                <th scope="col">Apply Date</th>
+                                <th scope="col">Approved_date</th>
+                                <th scope="col">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach($mos_deposits as $deposit) : ?>
+                                    <tr>
+                                        <td><?php echo $deposit->ID ?></td>
+                                        <td><?php echo $deposit->amount ?></td>
+                                        <td><?php echo $deposit->apply_date?></td>
+                                        <td><?php echo $deposit->approved_date?></td>
+                                        <td><?php echo $deposit->status?></td>
+                                    </tr>
+                            <?php endforeach?>
+                        </tbody>
+                    </table>
                 <?php elseif($p == 'add-deposit') : ?>
                     <form class="needs-validation" method="post" enctype="multipart/form-data">                        
                         <?php wp_nonce_field( 'mos_somity_add_deposit_action', 'mos_somity_add_deposit_field' ); ?>

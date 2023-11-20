@@ -5,7 +5,7 @@ use Carbon_Fields\Field;
 
 function mos_plugin_options_page() {
 	add_menu_page('Somity', 'Mos Somity', 'manage_options', 'mos-somity', 'mos_somity_options_page_html', 'dashicons-tickets', 2);
-	add_submenu_page('mos-somity', 'Deposits', 'Deposits', 'manage_options', 'mos-somity', 'mos_somity_options_page_html');
+	//add_submenu_page('mos-somity', 'Deposits', 'Deposits', 'manage_options', 'mos-somity', 'mos_somity_options_page_html');
 	//add_submenu_page('mos-somity', 'Deposits', 'Deposits', 'manage_options', 'mos-somity-deposit', 'mos_somity_options_page_html');
 }
 add_action('admin_menu', 'mos_plugin_options_page');

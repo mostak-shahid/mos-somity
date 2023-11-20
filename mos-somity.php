@@ -31,7 +31,8 @@ if ( ! defined( 'MOS_SOMITY_SETTINGS' ) ) {
 
 require_once ( plugin_dir_path( MOS_SOMITY_FILE ) . 'mos-somity-custom-tables.php' );
 require_once ( plugin_dir_path( MOS_SOMITY_FILE ) . 'mos-somity-admin-pages.php' );
-require_once ( plugin_dir_path( MOS_SOMITY_FILE ) . 'mos-somity-admin-table.php' );
+require_once ( plugin_dir_path( MOS_SOMITY_FILE ) . 'mos-somity-admin-deposits-table.php' );
+require_once ( plugin_dir_path( MOS_SOMITY_FILE ) . 'mos-somity-admin-skim-user-table.php' );
 
 require_once('plugins/update/plugin-update-checker.php');
 $pluginInit = Puc_v4_Factory::buildUpdateChecker(
