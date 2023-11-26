@@ -60,6 +60,7 @@ add_filter( 'page_template', 'mos_somity_account_page_template' );
 function mos_somity_enqueue_scripts(){
 	wp_enqueue_script( 'jquery' );
 	wp_enqueue_style( 'mos-somity', plugins_url( 'css/mos-somity.css', __FILE__ ) );
+	wp_enqueue_style( 'bootstrap.min', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css' );
 	wp_enqueue_script( 'mos-somity', plugins_url( 'js/mos-somity.js', __FILE__ ), array('jquery') );
 }
 add_action( 'wp_enqueue_scripts', 'mos_somity_enqueue_scripts' );
@@ -73,3 +74,22 @@ function mos_somity_ajax_scripts(){
 }
 add_action( 'wp_enqueue_scripts', 'mos_somity_ajax_scripts' );
 add_action( 'admin_enqueue_scripts', 'mos_somity_ajax_scripts' );
+
+
+
+add_action( 'init', 'mos_somity_blockusers_init' );
+function mos_somity_blockusers_init() {		
+	$redirect_url = (carbon_get_theme_option( 'mos_somity_account_page' ))?get_the_permalink(carbon_get_theme_option( 'mos_somity_account_page' )[0]['id']):home_url();
+
+	if ( is_admin() && ! current_user_can( 'administrator' ) &&	! ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+		if (is_user_logged_in()) {
+		wp_redirect( $redirect_url );
+		exit;
+		}
+		else {
+			wp_redirect( home_url() );
+			exit;
+		}
+	}
+	 
+}

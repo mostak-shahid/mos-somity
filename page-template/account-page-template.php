@@ -9,6 +9,24 @@ $mos_skim_user_active = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_sk
 
 $mos_deposits = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_deposits WHERE user_id = {$current_user_id}"); 
 
+$first_name = get_user_meta( $current_user_id, 'first_name', true ); 
+$last_name = get_user_meta( $current_user_id, 'last_name', true ); 
+$last_name = get_user_meta( $current_user_id, 'last_name', true ); 
+
+$address = carbon_get_user_meta( $current_user_id, 'mos-somity-user-address' );
+$nid = carbon_get_user_meta( $current_user_id, 'mos-somity-user-nid' );
+$passport = carbon_get_user_meta( $current_user_id, 'mos-somity-user-passport' );
+$image = carbon_get_user_meta( $current_user_id, 'mos-somity-user-image' );
+$nominee_name = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-name' );
+$nominee_address = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-address' );
+$nominee_nid = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-nid' );
+$nominee_passport = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-passport' );
+$nominee_image = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-image' );
+
+
+if (isset( $_POST['mos_somity_edit_profile_field'] ) && wp_verify_nonce( $_POST['mos_somity_edit_profile_field'], 'mos_somity_edit_profile_action' ) ) {
+    var_dump($_POST);
+}
 if (isset( $_POST['mos_somity_add_deposit_field'] ) && wp_verify_nonce( $_POST['mos_somity_add_deposit_field'], 'mos_somity_add_deposit_action' ) ) {
     // var_dump($_POST);
     $err = 0;
@@ -252,7 +270,48 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                         </tbody>
                     </table>
                 <?php elseif($p == 'edit-profile') : ?>
-                    edit profile
+                    <form class="needs-validation" method="post" enctype="multipart/form-data">                        
+                    <?php wp_nonce_field( 'mos_somity_edit_profile_action', 'mos_somity_edit_profile_field' ); ?>   
+                    <div class="card">  
+                        <div class="card-body">
+                        <h3 class="card-title">Personal Info</h3>                  
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input id="first_name" name="first_name" type="text" class="form-control" value="<?php echo @$first_name ?>" required>
+                            <div class="invalid-feedback">First name is required</div>
+                        </div>                   
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input id="last_name" name="last_name" type="text" class="form-control" value="<?php echo @
+                            $last_name ?>">
+                        </div>                    
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">National ID</label>
+                            <input id="first_name" name="first_name" type="text" class="form-control" value="<?php echo @$nid ?>">
+                        </div>                   
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">Passport</label>
+                            <input id="first_name" name="first_name" type="text" class="form-control" value="<?php echo @$passport ?>">
+                        </div>              
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Address</label>
+                            <textarea id="last_name" name="last_name" class="form-control"><?php echo @$address ?></textarea>
+                        </div>
+                        <div class="mb-3 upload-image">
+                            <label for="image" class="form-label">Image</label>
+                            <input name="image" type="file" class="form-control" aria-label="file example" required="" accept="image/png, image/gif, image/jpeg">
+                            <div class="invalid-feedback">Example invalid form file feedback</div>
+                            <?php if (@$image) : ?>
+                            <div class="mt-2 preview-image">
+                                <img src="<?php echo $image?>" alt="" class="img-fluid">
+                            </div>
+                            <?php endif?>
+                        </div>
+                        <input type="hidden" name="skim_id" value="">
+                        <button class="btn btn-primary" type="submit">Submit form</button>
+                            </div>
+                            </div>
+                        </form>
                 
                 <?php else : ?>
                     Dashboard

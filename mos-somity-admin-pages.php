@@ -57,6 +57,24 @@ add_filter("plugin_action_links_$plugin", 'mos_somity_settings_link');
 
 add_action('carbon_fields_register_fields', 'mos_somity_theme_options');
 function mos_somity_theme_options() {
+    Container::make( 'user_meta', 'User Info' )
+    ->add_fields( array(
+        Field::make( 'text', 'mos-somity-user-address', 'Address' ),
+        Field::make( 'text', 'mos-somity-user-nid', 'National ID Card' ),
+        Field::make( 'text', 'mos-somity-user-passport', 'Passport' ),
+        Field::make( 'image', 'mos-somity-user-image', __( 'Image' ) )
+            ->set_value_type( 'url' )
+    ) );
+    Container::make( 'user_meta', 'Nominee Info' )
+    ->add_fields( array(
+        Field::make( 'text', 'mos-somity-nominee-name', 'Name' ),
+        Field::make( 'text', 'mos-somity-nominee-address', 'Address' ),
+        Field::make( 'text', 'mos-somity-nominee-nid', 'National ID Card' ),
+        Field::make( 'text', 'mos-somity-nominee-passport', 'Passport' ),
+        Field::make( 'image', 'mos-somity-nominee-image', __( 'Image' ) )
+            ->set_value_type( 'url' )
+    ) );
+    
     Container::make('theme_options', __('Settings'))
         ->set_page_file( 'mos-somity-settings' )
         ->set_page_parent('mos-somity')
@@ -70,6 +88,14 @@ function mos_somity_theme_options() {
             ))
             ->set_max(1)
             ->set_required( true ), 
+
+            Field::make( 'text', 'mos_somity_worning_days', __( 'Last day of payment' ) )
+                ->set_attribute( 'type', 'number' )
+                ->set_attribute( 'min', 1 )
+                ->set_attribute( 'max', 30 )
+                ->set_default_value( 10 )
+                ->set_required( true ),
+
             Field::make('complex', 'mos_somity_source', __('Source'))
             ->set_required( true )
             ->set_default_value( [['title'=>'Bank', 'number'=>'0000-0000-0000']] )
@@ -77,6 +103,7 @@ function mos_somity_theme_options() {
                     Field::make('text', 'title', __('Title')),
                     Field::make('text', 'number', __('Account Number')),
                 )),
+
             Field::make('complex', 'mos_somity_skim', __('Skim'))
                 ->set_required( true )
                 ->set_default_value( [['title'=>'Default', 'amount'=>'0', 'rate'=>'0', 'time'=>'0', 'penalty'=>'0']] )
@@ -85,7 +112,8 @@ function mos_somity_theme_options() {
                     Field::make('text', 'amount', __('Amount')),
                     Field::make('text', 'rate', __('Rate')),
                     Field::make('text', 'time', __('Time (Month)')),
-                    Field::make('text', 'penalty', __('Penalty')),
+                    Field::make('text', 'penalty', __('Penalty'))
+                    ->set_help_text( 'If you add percentage "%" it will reduce the percentage valu otherwise it will reduct the given amount.' ),
                 )),
             Field::make( 'rich_text', 'mos_somity_notiece', __( 'Notiece for all user' ) )
        ));
