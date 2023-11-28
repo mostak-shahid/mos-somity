@@ -1,5 +1,16 @@
 <?php /*Template Name: Somity Account Page Template*/ ?>
 <?php
+if (!is_user_logged_in()) {
+    wp_redirect(home_url());
+    exit();
+} else {
+    $user = wp_get_current_user(); 
+    $roles = ( array ) $user->roles;
+    if(!sizeof($roles)) {        
+        wp_redirect(home_url());
+        exit();
+    }
+}
 global $wpdb;
 $table_mos_deposits = $wpdb->prefix.'mos_deposits';
 $table_mos_skim_user = $wpdb->prefix.'mos_skim_user';
@@ -17,14 +28,20 @@ $address = carbon_get_user_meta( $current_user_id, 'mos-somity-user-address' );
 $nid = carbon_get_user_meta( $current_user_id, 'mos-somity-user-nid' );
 $passport = carbon_get_user_meta( $current_user_id, 'mos-somity-user-passport' );
 $image = carbon_get_user_meta( $current_user_id, 'mos-somity-user-image' );
+
+$nominee_verified = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-verified' );
 $nominee_name = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-name' );
-$nominee_address = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-address' );
 $nominee_nid = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-nid' );
+$nominee_address = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-address' );
 $nominee_passport = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-passport' );
 $nominee_image = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-image' );
 
 
 if (isset( $_POST['mos_somity_edit_profile_field'] ) && wp_verify_nonce( $_POST['mos_somity_edit_profile_field'], 'mos_somity_edit_profile_action' ) ) {
+    var_dump($_POST);
+}
+
+if (isset( $_POST['mos_somity_edit_profile_field'] ) && wp_verify_nonce( $_POST['mos_somity_edit_profile_field'], 'mos_somity_edit_profile_action' ) && $nominee_verified == 'no') {
     var_dump($_POST);
 }
 if (isset( $_POST['mos_somity_add_deposit_field'] ) && wp_verify_nonce( $_POST['mos_somity_add_deposit_field'], 'mos_somity_add_deposit_action' ) ) {
@@ -114,7 +131,7 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
             <div class="col-lg-4">
                 <ul class="somity-account-menu">
                     <li><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>">Dashboard</a></li>
-                    
+
                     <li <?php echo ($p == 'deposits' || $p == 'add-deposit')?'class="menu-open"':''  ?>>
                         <a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=deposits">Deposits</a>
                         <ul>
@@ -135,186 +152,223 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
             </div>
             <div class="col-lg-8">
                 <?php if (@$mos_somity_notiece) : ?>
-                    <div class="somity-account-notiece"><?php echo $mos_somity_notiece ?></div>
+                <div class="somity-account-notiece"><?php echo $mos_somity_notiece ?></div>
                 <?php endif?>
                 <?php if (@$msg) : ?>
-                    <div class="somity-account-notiece"><?php echo $msg ?></div>
+                <div class="somity-account-notiece"><?php echo $msg ?></div>
                 <?php endif?>
 
                 <?php if($p == 'deposits') : ?>
-                    
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">Amount</th>
-                                <th scope="col">Apply Date</th>
-                                <th scope="col">Approved_date</th>
-                                <th scope="col">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach($mos_deposits as $deposit) : ?>
-                                    <tr>
-                                        <td><?php echo $deposit->ID ?></td>
-                                        <td><?php echo $deposit->amount ?></td>
-                                        <td><?php echo $deposit->apply_date?></td>
-                                        <td><?php echo $deposit->approved_date?></td>
-                                        <td><?php echo $deposit->status?></td>
-                                    </tr>
-                            <?php endforeach?>
-                        </tbody>
-                    </table>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Apply Date</th>
+                            <th scope="col">Approved_date</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($mos_deposits as $deposit) : ?>
+                        <tr>
+                            <td><?php echo $deposit->ID ?></td>
+                            <td><?php echo $deposit->amount ?></td>
+                            <td><?php echo $deposit->apply_date?></td>
+                            <td><?php echo $deposit->approved_date?></td>
+                            <td><?php echo $deposit->status?></td>
+                        </tr>
+                        <?php endforeach?>
+                    </tbody>
+                </table>
                 <?php elseif($p == 'add-deposit') : ?>
-                    <form class="needs-validation" method="post" enctype="multipart/form-data">                        
-                        <?php wp_nonce_field( 'mos_somity_add_deposit_action', 'mos_somity_add_deposit_field' ); ?>
-                        <div class="mb-3">
-                            <label for="skim" class="form-label">Select Skim</label>
-                            <select name="skim" class="form-select" id="skim" required>
-                                <option value="">Choose...</option>
-                                <?php foreach($mos_skim_user as $skim) : ?>
-                                    <?php $skim_details = json_decode($skim->skim_details)?>
-                                    <option value="<?php echo $skim->ID ?>"><?php echo $skim_details->title?>(ID: <?php echo $skim->ID ?>)</option>
-                                <?php endforeach?>
-                            </select>
-                            <div class="invalid-feedback">
-                            Please select a valid state.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="source" class="form-label">Source</label>
-                            <select name="source" class="form-select" id="source" required>
-                                <option value="">Choose...</option>
-                                <?php foreach($mos_somity_source as $source) : ?>
-                                    <option><?php echo $source['title'] ?>(<?php echo $source['number'] ?>)</option>
-                                <?php endforeach?>
-                            </select>
-                            <div class="invalid-feedback">
-                            Please select a valid state.
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="amount" class="form-label">Amount</label>
-                            <input name="amount" type="number" class="form-control" required>
-                            <div class="invalid-feedback">Example invalid form file feedback</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Image</label>
-                            <input name="image" type="file" class="form-control" aria-label="file example" required accept="image/png, image/gif, image/jpeg">
-                            <div class="invalid-feedback">Example invalid form file feedback</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="comment" class="form-label">Textarea</label>
-                            <textarea name="comment" class="form-control" id="comment" placeholder="Comment"></textarea>
-                        </div>
-                        <input type="hidden" name="skim_id" value="">
-                        <button class="btn btn-primary" type="submit">Submit form</button>
-                        </form>
-                <?php elseif($p == 'skims') : ?>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">Title</th>
-                                <th scope="col">Amount</th>
-                                <th scope="col">Rate</th>
-                                <th scope="col">Time (Month)</th>
-                                <th scope="col">Penalty</th>
-                                <th scope="col">Apply Date</th>
-                                <th scope="col">End Date</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <form class="needs-validation" method="post" enctype="multipart/form-data">
+                    <?php wp_nonce_field( 'mos_somity_add_deposit_action', 'mos_somity_add_deposit_field' ); ?>
+                    <div class="mb-3">
+                        <label for="skim" class="form-label">Select Skim</label>
+                        <select name="skim" class="form-select" id="skim" required>
+                            <option value="">Choose...</option>
                             <?php foreach($mos_skim_user as $skim) : ?>
-                                <?php $skim_details = json_decode($skim->skim_details)?>
-                                    <tr>
-                                        <td><?php echo $skim->ID ?></td>
-                                        <td><?php echo $skim_details->title ?></td>
-                                        <td><?php echo $skim_details->amount ?></td>
-                                        <td><?php echo $skim_details->rate ?></td>
-                                        <td><?php echo $skim_details->time ?></td>
-                                        <td><?php echo $skim_details->penalty ?></td>
-                                        <td><?php echo $skim->apply_date?></td>
-                                        <td>End Date</td>
-                                        <td><?php echo $skim->status ?></td>
-                                        <td><a href="#">Close</a></td>
-                                    </tr>
+                            <?php $skim_details = json_decode($skim->skim_details)?>
+                            <option value="<?php echo $skim->ID ?>"><?php echo $skim_details->title?>(ID: <?php echo $skim->ID ?>)</option>
                             <?php endforeach?>
-                        </tbody>
-                    </table>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a valid state.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="source" class="form-label">Source</label>
+                        <select name="source" class="form-select" id="source" required>
+                            <option value="">Choose...</option>
+                            <?php foreach($mos_somity_source as $source) : ?>
+                            <option><?php echo $source['title'] ?>(<?php echo $source['number'] ?>)</option>
+                            <?php endforeach?>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a valid state.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input name="amount" type="number" class="form-control" required>
+                        <div class="invalid-feedback">Example invalid form file feedback</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Image</label>
+                        <input name="image" type="file" class="form-control" aria-label="file example" required accept="image/png, image/gif, image/jpeg">
+                        <div class="invalid-feedback">Example invalid form file feedback</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Textarea</label>
+                        <textarea name="comment" class="form-control" id="comment" placeholder="Comment"></textarea>
+                    </div>
+                    <input type="hidden" name="skim_id" value="">
+                    <button class="btn btn-primary" type="submit">Submit form</button>
+                </form>
+                <?php elseif($p == 'skims') : ?>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Title</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Rate</th>
+                            <th scope="col">Time (Month)</th>
+                            <th scope="col">Penalty</th>
+                            <th scope="col">Apply Date</th>
+                            <th scope="col">End Date</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($mos_skim_user as $skim) : ?>
+                        <?php $skim_details = json_decode($skim->skim_details)?>
+                        <tr>
+                            <td><?php echo $skim->ID ?></td>
+                            <td><?php echo $skim_details->title ?></td>
+                            <td><?php echo $skim_details->amount ?></td>
+                            <td><?php echo $skim_details->rate ?></td>
+                            <td><?php echo $skim_details->time ?></td>
+                            <td><?php echo $skim_details->penalty ?></td>
+                            <td><?php echo $skim->apply_date?></td>
+                            <td>End Date</td>
+                            <td><?php echo $skim->status ?></td>
+                            <td><a href="#">Close</a></td>
+                        </tr>
+                        <?php endforeach?>
+                    </tbody>
+                </table>
                 <?php elseif($p == 'add-skim') : ?>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Title</th>
-                                <th scope="col">Amount</th>
-                                <th scope="col">Rate</th>
-                                <th scope="col">Time (Month)</th>
-                                <th scope="col">Penalty</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach($mos_somity_skim as $skim) : ?>
-                            <tr>
-                                <td><?php echo $skim['title'] ?></td>
-                                <td><?php echo $skim['amount'] ?></td>
-                                <td><?php echo $skim['rate'] ?></td>
-                                <td><?php echo $skim['time'] ?></td>
-                                <td><?php echo $skim['penalty'] ?></td>
-                                <td><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-skim&action=add_skim&title=<?php echo $skim['title'] ?>&amount=<?php echo $skim['amount'] ?>&rate=<?php echo $skim['rate'] ?>&time=<?php echo $skim['time'] ?>&penalty=<?php echo $skim['penalty'] ?>">Apply</a></td>
-                            </tr>
-                            <?php endforeach?>
-                        </tbody>
-                    </table>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Rate</th>
+                            <th scope="col">Time (Month)</th>
+                            <th scope="col">Penalty</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($mos_somity_skim as $skim) : ?>
+                        <tr>
+                            <td><?php echo $skim['title'] ?></td>
+                            <td><?php echo $skim['amount'] ?></td>
+                            <td><?php echo $skim['rate'] ?></td>
+                            <td><?php echo $skim['time'] ?></td>
+                            <td><?php echo $skim['penalty'] ?></td>
+                            <td><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-skim&action=add_skim&title=<?php echo $skim['title'] ?>&amount=<?php echo $skim['amount'] ?>&rate=<?php echo $skim['rate'] ?>&time=<?php echo $skim['time'] ?>&penalty=<?php echo $skim['penalty'] ?>">Apply</a></td>
+                        </tr>
+                        <?php endforeach?>
+                    </tbody>
+                </table>
                 <?php elseif($p == 'edit-profile') : ?>
-                    <form class="needs-validation" method="post" enctype="multipart/form-data">                        
-                    <?php wp_nonce_field( 'mos_somity_edit_profile_action', 'mos_somity_edit_profile_field' ); ?>   
-                    <div class="card">  
+                <form class="needs-validation mb-4" method="post" enctype="multipart/form-data">
+                    <?php wp_nonce_field( 'mos_somity_edit_profile_action', 'mos_somity_edit_profile_field' ); ?>
+                    <div class="card">
                         <div class="card-body">
-                        <h3 class="card-title">Personal Info</h3>                  
-                        <div class="mb-3">
-                            <label for="first_name" class="form-label">First Name</label>
-                            <input id="first_name" name="first_name" type="text" class="form-control" value="<?php echo @$first_name ?>" required>
-                            <div class="invalid-feedback">First name is required</div>
-                        </div>                   
-                        <div class="mb-3">
-                            <label for="last_name" class="form-label">Last Name</label>
-                            <input id="last_name" name="last_name" type="text" class="form-control" value="<?php echo @
+                            <h3 class="card-title">Personal Info</h3>
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input id="first_name" name="first_name" type="text" class="form-control" value="<?php echo @$first_name ?>" required>
+                                <div class="invalid-feedback">First name is required</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input id="last_name" name="last_name" type="text" class="form-control" value="<?php echo @
                             $last_name ?>">
-                        </div>                    
-                        <div class="mb-3">
-                            <label for="first_name" class="form-label">National ID</label>
-                            <input id="first_name" name="first_name" type="text" class="form-control" value="<?php echo @$nid ?>">
-                        </div>                   
-                        <div class="mb-3">
-                            <label for="first_name" class="form-label">Passport</label>
-                            <input id="first_name" name="first_name" type="text" class="form-control" value="<?php echo @$passport ?>">
-                        </div>              
-                        <div class="mb-3">
-                            <label for="last_name" class="form-label">Address</label>
-                            <textarea id="last_name" name="last_name" class="form-control"><?php echo @$address ?></textarea>
-                        </div>
-                        <div class="mb-3 upload-image">
-                            <label for="image" class="form-label">Image</label>
-                            <input name="image" type="file" class="form-control" aria-label="file example" required="" accept="image/png, image/gif, image/jpeg">
-                            <div class="invalid-feedback">Example invalid form file feedback</div>
-                            <?php if (@$image) : ?>
-                            <div class="mt-2 preview-image">
-                                <img src="<?php echo $image?>" alt="" class="img-fluid">
                             </div>
-                            <?php endif?>
-                        </div>
-                        <input type="hidden" name="skim_id" value="">
-                        <button class="btn btn-primary" type="submit">Submit form</button>
+                            <div class="mb-3">
+                                <label for="user_nid" class="form-label">National ID</label>
+                                <input id="user_nid" name="user_nid" type="text" class="form-control" value="<?php echo @$nid ?>">
                             </div>
+                            <div class="mb-3">
+                                <label for="user_passport" class="form-label">Passport</label>
+                                <input id="user_passport" name="user_passport" type="text" class="form-control" value="<?php echo @$passport ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label for="user_address" class="form-label">Address</label>
+                                <textarea id="user_address" name="user_address" class="form-control"><?php echo @$address ?></textarea>
+                            </div>
+                            <div class="mb-3 upload-image">
+                                <label for="user_image" class="form-label">Image</label>
+                                <input name="user_image" id="user_image" type="file" class="form-control" aria-label="file example" required="" accept="image/png, image/gif, image/jpeg">
+                                <div class="invalid-feedback">Example invalid form file feedback</div>
+                                <?php if (@$image) : ?>
+                                <div class="mt-2 preview-image" style="max-width: 250px">
+                                    <img src="<?php echo $image?>" alt="" class="img-fluid">
+                                </div>
+                                <?php endif?>
+                            </div>
+                            <input type="hidden" name="skim_id" value="">
+                            <button class="btn btn-primary" type="submit">Save Profile</button>
+                        </div>
+                    </div>
+                </form>
+                <form class="needs-validation" method="post" enctype="multipart/form-data">
+                            <?php wp_nonce_field( 'mos_somity_edit_nominee_profile_action', 'mos_somity_edit_nominee_profile_field' ); ?>
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3 class="card-title">Nominee Info</h3>
+                                    <div class="mb-3">
+                                        <label for="nominee_name" class="form-label">Name</label>
+                                        <input id="nominee_name" name="nominee_name" type="text" class="form-control" value="<?php echo @$nominee_name ?>" required>
+                                        <div class="invalid-feedback">Name is required</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="nominee_nid" class="form-label">National ID</label>
+                                        <input id="nominee_nid" name="nominee_nid" type="text" class="form-control" value="<?php echo @$nominee_nid ?>">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="nominee_passport" class="form-label">Passport</label>
+                                        <input id="nominee_passport" name="nominee_passport" type="text" class="form-control" value="<?php echo @$nominee_passport ?>">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="nominee_address" class="form-label">Address</label>
+                                        <textarea id="nominee_address" name="nominee_address" class="form-control"><?php echo @$nominee_address ?></textarea>
+                                    </div>
+                                    <div class="mb-3 upload-image">
+                                        <label for="nominee_image" class="form-label">Image</label>
+                                        <input name="nominee_image" id="nominee_image" type="file" class="form-control" aria-label="file example" required="" accept="image/png, image/gif, image/jpeg">
+                                        <div class="invalid-feedback">Example invalid form file feedback</div>
+                                        <?php if (@$nominee_image) : ?>
+                                        <div class="mt-2 preview-image" style="max-width: 250px">
+                                            <img src="<?php echo $nominee_image?>" alt="" class="img-fluid">
+                                        </div>
+                                        <?php endif?>
+                                    </div>
+                                    <input type="hidden" name="skim_id" value="">
+                                    <button class="btn btn-primary" type="submit">Save Profile</button>
+                                </div>
                             </div>
                         </form>
-                
                 <?php else : ?>
-                    Dashboard
+                Dashboard
+                <?php echo $current_user_id ?>
                 <?php endif?>
             </div>
         </div>

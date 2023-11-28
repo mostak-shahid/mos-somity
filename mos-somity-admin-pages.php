@@ -67,6 +67,12 @@ function mos_somity_theme_options() {
     ) );
     Container::make( 'user_meta', 'Nominee Info' )
     ->add_fields( array(
+        Field::make( 'select', 'mos-somity-nominee-verified', 'Nominee verification' )
+        ->add_options( array(
+            'no' => 'No',
+            'yes' => 'Yes',
+        ))
+        ->set_default_value( 'no' ),
         Field::make( 'text', 'mos-somity-nominee-name', 'Name' ),
         Field::make( 'text', 'mos-somity-nominee-address', 'Address' ),
         Field::make( 'text', 'mos-somity-nominee-nid', 'National ID Card' ),
