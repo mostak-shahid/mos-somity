@@ -11,6 +11,13 @@ if (!is_user_logged_in()) {
         exit();
     }
 }
+
+if (!function_exists('wp_generate_attachment_metadata')){
+    require_once(ABSPATH . "wp-admin" . '/includes/image.php');
+    require_once(ABSPATH . "wp-admin" . '/includes/file.php');
+    require_once(ABSPATH . "wp-admin" . '/includes/media.php');
+}
+
 global $wpdb;
 $table_mos_deposits = $wpdb->prefix.'mos_deposits';
 $table_mos_skim_user = $wpdb->prefix.'mos_skim_user';
@@ -20,35 +27,84 @@ $mos_skim_user_active = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_sk
 
 $mos_deposits = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}mos_deposits WHERE user_id = {$current_user_id}"); 
 
-$first_name = get_user_meta( $current_user_id, 'first_name', true ); 
-$last_name = get_user_meta( $current_user_id, 'last_name', true ); 
-$last_name = get_user_meta( $current_user_id, 'last_name', true ); 
-
-$address = carbon_get_user_meta( $current_user_id, 'mos-somity-user-address' );
-$nid = carbon_get_user_meta( $current_user_id, 'mos-somity-user-nid' );
-$passport = carbon_get_user_meta( $current_user_id, 'mos-somity-user-passport' );
-$image = carbon_get_user_meta( $current_user_id, 'mos-somity-user-image' );
 
 $nominee_verified = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-verified' );
+
+
+if (isset( $_POST['mos_somity_edit_profile_field'] ) && wp_verify_nonce( $_POST['mos_somity_edit_profile_field'], 'mos_somity_edit_profile_action' ) ) {
+    $err = 0;
+
+    $user_image_file = $_FILES['user_image'];
+    if ($user_image_file) {
+        //var_dump($user_image_file);
+        if($user_image_file['type'] != 'image/jpeg' && $user_image_file['type'] != 'image/png' && $user_image_file['type'] != 'image/gif') {
+            $err++;
+        }
+        if ($user_image_file["size"] > 5000000) {
+            $err++;
+        }
+        if (!$err) {
+            /*["name"]=> string(9) "job_1.png" 
+            ["full_path"]=> string(9) "job_1.png" 
+            ["type"]=> string(9) "image/png" 
+            ["tmp_name"]=> string(44) "C:\Users\User\AppData\Local\Temp\phpE100.tmp" 
+            ["error"]=> int(0) 
+            ["size"]=> int(357677)
+            */
+            
+            $attach_id = media_handle_upload($file,$new_post);
+            echo wp_get_attachment_url($attach_id);//upload file URL
+
+            $upload_overrides = array( 'test_form' => false );
+            $movefile = wp_handle_upload( $user_image_file, $upload_overrides );
+
+        }
+    }
+    //var_dump($_POST);
+    if ($_POST['first_name']) update_user_meta( $current_user_id, 'first_name', $_POST['first_name'] );
+    if ($_POST['last_name']) update_user_meta( $current_user_id, 'last_name', $_POST['last_name'] );
+    if ($_POST['user_nid']) update_user_meta( $current_user_id, '_mos-somity-user-nid', $_POST['user_nid'] );
+    if ($_POST['user_passport']) update_user_meta( $current_user_id, '_mos-somity-user-passport', $_POST['user_passport'] );
+    if ($_POST['user_address']) update_user_meta( $current_user_id, '_mos-somity-user-address', $_POST['user_address'] );
+    if (@$movefile["url"]) update_user_meta( $current_user_id, '_mos-somity-user-image', $movefile["url"] );
+}
+
+if (isset( $_POST['mos_somity_edit_nominee_profile_field'] ) && wp_verify_nonce( $_POST['mos_somity_edit_nominee_profile_field'], 'mos_somity_edit_nominee_profile_action' ) && $nominee_verified == 'no') {
+    var_dump($_POST);
+    /*
+array(7) {
+  ["mos_somity_edit_nominee_profile_field"]=>
+  string(10) "56f12b86a8"
+  ["_wp_http_referer"]=>
+  string(34) "/somity-account/?p=nominee-profile"
+  ["nominee_name"]=>
+  string(24) "Md. Mostak Shahid Edited"
+  ["nominee_nid"]=>
+  string(11) "Nominee NID"
+  ["nominee_passport"]=>
+  string(10) "9632587410"
+  ["nominee_address"]=>
+  string(43) "982/2A East Monipur, Mirpur 2, Dhaka - 1216"
+  ["skim_id"]=>
+  string(0) ""
+}
+
+
+
 $nominee_name = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-name' );
 $nominee_nid = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-nid' );
 $nominee_address = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-address' );
 $nominee_passport = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-passport' );
 $nominee_image = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-image' );
-
-
-if (isset( $_POST['mos_somity_edit_profile_field'] ) && wp_verify_nonce( $_POST['mos_somity_edit_profile_field'], 'mos_somity_edit_profile_action' ) ) {
-    var_dump($_POST);
-}
-
-if (isset( $_POST['mos_somity_edit_profile_field'] ) && wp_verify_nonce( $_POST['mos_somity_edit_profile_field'], 'mos_somity_edit_profile_action' ) && $nominee_verified == 'no') {
-    var_dump($_POST);
+     */
+    if ($_POST['nominee_name']) update_user_meta( $current_user_id, '_mos-somity-nominee-name', $_POST['nominee_name'] );
+    if ($_POST['nominee_nid']) update_user_meta( $current_user_id, '_mos-somity-nominee-nid', $_POST['nominee_nid'] );
+    if ($_POST['nominee_passport']) update_user_meta( $current_user_id, '_mos-somity-nominee-passport', $_POST['nominee_passport'] );
+    if ($_POST['nominee_address']) update_user_meta( $current_user_id, '_mos-somity-nominee-address', $_POST['nominee_address'] );
 }
 if (isset( $_POST['mos_somity_add_deposit_field'] ) && wp_verify_nonce( $_POST['mos_somity_add_deposit_field'], 'mos_somity_add_deposit_action' ) ) {
     // var_dump($_POST);
     $err = 0;
-    if ( ! function_exists( 'wp_handle_upload' ) ) 
-    require_once( ABSPATH . 'wp-admin/includes/file.php' );
 
     $uploadedfile = $_FILES['image'];
     if ($uploadedfile) {
@@ -123,6 +179,23 @@ $mos_somity_account_page = carbon_get_theme_option('mos_somity_account_page');
 $mos_somity_source = carbon_get_theme_option('mos_somity_source');
 $mos_somity_skim = carbon_get_theme_option('mos_somity_skim');
 $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
+
+
+
+$first_name = get_user_meta( $current_user_id, 'first_name', true ); 
+$last_name = get_user_meta( $current_user_id, 'last_name', true ); 
+
+$address = carbon_get_user_meta( $current_user_id, 'mos-somity-user-address' );
+$nid = carbon_get_user_meta( $current_user_id, 'mos-somity-user-nid' );
+$passport = carbon_get_user_meta( $current_user_id, 'mos-somity-user-passport' );
+$image = carbon_get_user_meta( $current_user_id, 'mos-somity-user-image' );
+
+$nominee_name = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-name' );
+$nominee_nid = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-nid' );
+$nominee_address = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-address' );
+$nominee_passport = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-passport' );
+$nominee_image = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-image' );
+
 ?>
 <?php get_header() ?>
 <section class="somity-account-wrap">
@@ -130,24 +203,25 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
         <div class="row">
             <div class="col-lg-4">
                 <ul class="somity-account-menu">
-                    <li><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>">Dashboard</a></li>
+                    <li><a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>">Dashboard</a></li>
 
                     <li <?php echo ($p == 'deposits' || $p == 'add-deposit')?'class="menu-open"':''  ?>>
-                        <a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=deposits">Deposits</a>
+                        <a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=deposits">Deposits</a>
                         <ul>
-                            <li <?php echo ($p == 'deposits')?'class="menu-active"':''  ?>><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=deposits">All Deposit</a></li>
-                            <li <?php echo ($p == 'add-deposit')?'class="menu-active"':''  ?>><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-deposit">Add Deposit</a></li>
+                            <li <?php echo ($p == 'deposits')?'class="menu-active"':''  ?>><a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=deposits">All Deposit</a></li>
+                            <li <?php echo ($p == 'add-deposit')?'class="menu-active"':''  ?>><a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-deposit">Add Deposit</a></li>
                         </ul>
                     </li>
                     <li <?php echo ($p == 'skims' || $p == 'add-skim')?'class="menu-open"':''  ?>>
-                        <a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=skims">Skims</a>
+                        <a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=skims">Skims</a>
                         <ul>
-                            <li <?php echo ($p == 'skims')?'class="menu-active"':''  ?>><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=skims">All Skim</a></li>
-                            <li <?php echo ($p == 'add-skim')?'class="menu-active"':''  ?>><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-skim">Add Skim</a></li>
+                            <li <?php echo ($p == 'skims')?'class="menu-active"':''  ?>><a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=skims">All Skim</a></li>
+                            <li <?php echo ($p == 'add-skim')?'class="menu-active"':''  ?>><a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=add-skim">Add Skim</a></li>
                         </ul>
                     </li>
-                    <li><a href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=edit-profile">Edit Profile</a></li>
-                    <li><a href="<?php echo wp_logout_url( home_url() ); ?>">Logout</a></li>
+                    <li><a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=edit-profile">Edit Profile</a></li>
+                    <li><a class="link-underline link-underline-opacity-0" href="<?php echo get_the_permalink($mos_somity_account_page[0]['id']) ?>?p=nominee-profile">Nominee Profile</a></li>
+                    <li><a class="link-underline link-underline-opacity-0" href="<?php echo wp_logout_url( home_url() ); ?>">Logout</a></li>
                 </ul>
             </div>
             <div class="col-lg-8">
@@ -316,8 +390,7 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                             </div>
                             <div class="mb-3 upload-image">
                                 <label for="user_image" class="form-label">Image</label>
-                                <input name="user_image" id="user_image" type="file" class="form-control" aria-label="file example" required="" accept="image/png, image/gif, image/jpeg">
-                                <div class="invalid-feedback">Example invalid form file feedback</div>
+                                <input name="user_image" id="user_image" type="file" class="form-control" aria-label="file example" accept="image/png, image/gif, image/jpeg">
                                 <?php if (@$image) : ?>
                                 <div class="mt-2 preview-image" style="max-width: 250px">
                                     <img src="<?php echo $image?>" alt="" class="img-fluid">
@@ -329,6 +402,7 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                         </div>
                     </div>
                 </form>
+                <?php elseif($p == 'nominee-profile') : ?>
                 <form class="needs-validation" method="post" enctype="multipart/form-data">
                             <?php wp_nonce_field( 'mos_somity_edit_nominee_profile_action', 'mos_somity_edit_nominee_profile_field' ); ?>
                             <div class="card">
@@ -353,8 +427,7 @@ $mos_somity_notiece = carbon_get_theme_option('mos_somity_notiece');
                                     </div>
                                     <div class="mb-3 upload-image">
                                         <label for="nominee_image" class="form-label">Image</label>
-                                        <input name="nominee_image" id="nominee_image" type="file" class="form-control" aria-label="file example" required="" accept="image/png, image/gif, image/jpeg">
-                                        <div class="invalid-feedback">Example invalid form file feedback</div>
+                                        <input name="nominee_image" id="nominee_image" type="file" class="form-control" aria-label="file example" accept="image/png, image/gif, image/jpeg">
                                         <?php if (@$nominee_image) : ?>
                                         <div class="mt-2 preview-image" style="max-width: 250px">
                                             <img src="<?php echo $nominee_image?>" alt="" class="img-fluid">
