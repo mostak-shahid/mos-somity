@@ -44,20 +44,7 @@ if (isset( $_POST['mos_somity_edit_profile_field'] ) && wp_verify_nonce( $_POST[
             $err++;
         }
         if (!$err) {
-            /*["name"]=> string(9) "job_1.png" 
-            ["full_path"]=> string(9) "job_1.png" 
-            ["type"]=> string(9) "image/png" 
-            ["tmp_name"]=> string(44) "C:\Users\User\AppData\Local\Temp\phpE100.tmp" 
-            ["error"]=> int(0) 
-            ["size"]=> int(357677)
-            */
-            
-            $attach_id = media_handle_upload($file,$new_post);
-            echo wp_get_attachment_url($attach_id);//upload file URL
-
-            $upload_overrides = array( 'test_form' => false );
-            $movefile = wp_handle_upload( $user_image_file, $upload_overrides );
-
+            $movefile = handle_upload('user_image');
         }
     }
     //var_dump($_POST);
@@ -70,37 +57,28 @@ if (isset( $_POST['mos_somity_edit_profile_field'] ) && wp_verify_nonce( $_POST[
 }
 
 if (isset( $_POST['mos_somity_edit_nominee_profile_field'] ) && wp_verify_nonce( $_POST['mos_somity_edit_nominee_profile_field'], 'mos_somity_edit_nominee_profile_action' ) && $nominee_verified == 'no') {
-    var_dump($_POST);
-    /*
-array(7) {
-  ["mos_somity_edit_nominee_profile_field"]=>
-  string(10) "56f12b86a8"
-  ["_wp_http_referer"]=>
-  string(34) "/somity-account/?p=nominee-profile"
-  ["nominee_name"]=>
-  string(24) "Md. Mostak Shahid Edited"
-  ["nominee_nid"]=>
-  string(11) "Nominee NID"
-  ["nominee_passport"]=>
-  string(10) "9632587410"
-  ["nominee_address"]=>
-  string(43) "982/2A East Monipur, Mirpur 2, Dhaka - 1216"
-  ["skim_id"]=>
-  string(0) ""
-}
+    //var_dump($_POST);
+    
+    $err = 0;
 
-
-
-$nominee_name = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-name' );
-$nominee_nid = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-nid' );
-$nominee_address = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-address' );
-$nominee_passport = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-passport' );
-$nominee_image = carbon_get_user_meta( $current_user_id, 'mos-somity-nominee-image' );
-     */
+    $nominee_image_file = $_FILES['nominee_image'];
+    if ($nominee_image_file) {
+        //var_dump($user_image_file);
+        if($nominee_image_file['type'] != 'image/jpeg' && $nominee_image_file['type'] != 'image/png' && $nominee_image_file['type'] != 'image/gif') {
+            $err++;
+        }
+        if ($nominee_image_file["size"] > 5000000) {
+            $err++;
+        }
+        if (!$err) {
+            $movefile = handle_upload('nominee_image');
+        }
+    }
     if ($_POST['nominee_name']) update_user_meta( $current_user_id, '_mos-somity-nominee-name', $_POST['nominee_name'] );
     if ($_POST['nominee_nid']) update_user_meta( $current_user_id, '_mos-somity-nominee-nid', $_POST['nominee_nid'] );
     if ($_POST['nominee_passport']) update_user_meta( $current_user_id, '_mos-somity-nominee-passport', $_POST['nominee_passport'] );
     if ($_POST['nominee_address']) update_user_meta( $current_user_id, '_mos-somity-nominee-address', $_POST['nominee_address'] );
+    if (@$movefile["url"]) update_user_meta( $current_user_id, '_mos-somity-nominee-image', $movefile["url"] );
 }
 if (isset( $_POST['mos_somity_add_deposit_field'] ) && wp_verify_nonce( $_POST['mos_somity_add_deposit_field'], 'mos_somity_add_deposit_action' ) ) {
     // var_dump($_POST);
@@ -116,17 +94,7 @@ if (isset( $_POST['mos_somity_add_deposit_field'] ) && wp_verify_nonce( $_POST['
             $err++;
         }
         if (!$err) {
-            /*["name"]=> string(9) "job_1.png" 
-            ["full_path"]=> string(9) "job_1.png" 
-            ["type"]=> string(9) "image/png" 
-            ["tmp_name"]=> string(44) "C:\Users\User\AppData\Local\Temp\phpE100.tmp" 
-            ["error"]=> int(0) 
-            ["size"]=> int(357677)
-            */
-
-            $upload_overrides = array( 'test_form' => false );
-            $movefile = wp_handle_upload( $uploadedfile, $upload_overrides );
-
+            $movefile = handle_upload('image');
         }
     } else {
         $err++;
